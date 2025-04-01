@@ -6,6 +6,7 @@ def load_model(model_path):
     """Tải mô hình YOLOv11 để nhận diện biển số xe."""
     model = torch.hub.load('ultralytics/yolov11', 'custom', path=model_path, force_reload=True)
     return model
+
 def detect_license_plate(model, image_path, conf_threshold=0.5):
     """Nhận diện biển số xe trong ảnh bằng mô hình YOLOv11."""
     # Đọc ảnh đầu vào
