@@ -35,6 +35,14 @@ def preprocess_image(image_path):
     sharpened_img = cv2.filter2D(gray_img, -1, kernel)
     show_image("Sharpened Image", sharpened_img)
     
+    # Bước 4: Nhị phân hóa ảnh bằng ngưỡng động
+            # thresh_value = 155  # Ngưỡng tĩnh bạn có thể điều chỉnh
+            # _, binary_img = cv2.threshold(sharpened_img, thresh_value, 255, cv2.THRESH_BINARY)
+            # show_image("Binary Image", binary_img)
+    binary_img = cv2.adaptiveThreshold(sharpened_img, 255, 
+                                      cv2.ADAPTIVE_THRESH_MEAN_C, 
+                                      cv2.THRESH_BINARY, 
+                                      11, 2)  # Tham số 11: kích thước của vùng ô vuông (block size), 2: giá trị điều chỉnh
     show_image("Binary Image", binary_img)
 
     # Chuyển lại về ảnh màu (3 kênh) để phù hợp đầu vào của YOLOv11
