@@ -3,7 +3,7 @@ import numpy as np
 from ultralytics import YOLO
 import matplotlib.pyplot as plt
 import os
-import time  # Để tạo dấu thời gian cho tên tệp
+import time  
 
 # Hàm hiển thị ảnh
 def show_image(title, img):
@@ -16,7 +16,7 @@ def show_image(title, img):
     plt.axis('off')
     plt.show()
 
-# Tiền xử lý ảnh
+#xử lý ảnh
 def preprocess_image(image_path):
     # Đọc ảnh
     img = cv2.imread(image_path)
@@ -89,7 +89,13 @@ def process_images_from_directory(model, input_dir, output_dir):
     print("ĐÃ CẮT ẢNH XONG")
 
 # Hàm xử lý ảnh đơn (một ảnh)
-def process_single_image(model, img, output_dir):
+def process_single_image(model, img_path, output_dir):
+    # Đọc ảnh từ đường dẫn
+    img = cv2.imread(img_path)
+    if img is None:
+        print(f"Không thể đọc ảnh từ đường dẫn: {img_path}")
+        return [], None
+
     # Dự đoán với mô hình YOLO
     results = model.predict(img, save=True, save_txt=True, conf=0.25)
 
@@ -127,29 +133,28 @@ def process_single_image(model, img, output_dir):
     return cropped_plates, result_img
 
 # Hàm chính để nhận diện biển số xe
-def detect_plate(model, img, output_dir, input_dir=None):
+def detect_plate(model, img_path, output_dir, input_dir=None):
     # Nếu có thư mục input_dir, xử lý tất cả các ảnh trong thư mục đó
     if input_dir:
         process_images_from_directory(model, input_dir, output_dir)  # Xử lý tất cả ảnh trong thư mục
         return
 
     # Nếu chỉ có một ảnh đầu vào, xử lý ảnh đó
-    return process_single_image(model, img, output_dir)
+    return process_single_image(model, img_path, output_dir)
 
+if __name__ == "__main__":
+    # Đường dẫn đến mô hình YOLO đã huấn luyện
+    model_path = "C:/Users/ADMIN/Documents/GitHub/ThiGiacMay/runs/detect/train/weights/best.pt"
+    model = load_model(model_path)
 
-# if __name__ == "__main__":
-#     # Đường dẫn đến mô hình YOLO đã huấn luyện
-#     model_path = "C:/Users/ADMIN/Documents/GitHub/ThiGiacMay/runs/detect/train/weights/best.pt"
-#     model = load_model(model_path)
+    # Đường dẫn đến ảnh cần nhận diện
+    image_path = "C:/Users/ADMIN/Documents/GitHub/ThiGiacMay/xe.png"
+    
+    # Tiền xử lý ảnh
+    # processed_img = preprocess_image(image_path)
 
-#     # Đường dẫn đến ảnh cần nhận diện
-#     image_path = "C:/Users/ADMIN/Documents/GitHub/ThiGiacMay/xemay_1.jpg"
+    # Đường dẫn thư mục để lưu ảnh cắt
+    output_dir = "C:/Users/ADMIN/Documents/GitHub/ThiGiacMay/cropped_images"  # Thư mục đầu ra
     
-#     # Tiền xử lý ảnh
-#     processed_img = preprocess_image(image_path)
-    
-#     # Đường dẫn thư mục để lưu ảnh cắt
-#     output_dir = "C:/Users/ADMIN/Documents/GitHub/ThiGiacMay/cropped_images"  # Thư mục đầu ra
-    
-#     # Nhận diện biển số xe bằng YOLO và cắt từng biển số ra
-#     cropped_plates, closing_plates = detect_plate(model, processed_img, output_dir)
+    # Nhận diện biển số xe bằng YOLO và cắt từng biển số ra
+    cropped_plates, closing_plates = detect_plate(model, image_path, output_dir)
