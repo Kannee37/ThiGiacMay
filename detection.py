@@ -35,9 +35,6 @@ def preprocess_image(image_path):
     sharpened_img = cv2.filter2D(gray_img, -1, kernel)
     show_image("Sharpened Image", sharpened_img)
     
-    # Bước 4: Nhị phân hóa ảnh bằng ngưỡng tĩnh (Static Thresholding)
-    thresh_value = 155  # Ngưỡng tĩnh bạn có thể điều chỉnh
-    _, binary_img = cv2.threshold(sharpened_img, thresh_value, 255, cv2.THRESH_BINARY)
     show_image("Binary Image", binary_img)
 
     # Chuyển lại về ảnh màu (3 kênh) để phù hợp đầu vào của YOLOv11
@@ -138,7 +135,7 @@ def detect_plate(model, img, output_dir, input_dir=None):
 #     model = load_model(model_path)
 
 #     # Đường dẫn đến ảnh cần nhận diện
-#     image_path = "C:/Users/ADMIN/Documents/GitHub/ThiGiacMay/xemay.jpg"
+#     image_path = "C:/Users/ADMIN/Documents/GitHub/ThiGiacMay/xemay_1.jpg"
     
 #     # Tiền xử lý ảnh
 #     processed_img = preprocess_image(image_path)
