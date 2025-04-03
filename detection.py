@@ -26,19 +26,15 @@ def preprocess_image(image_path):
     denoised_img = cv2.GaussianBlur(img, (5, 5), 0)  # Kernel lớn để khử noise hiệu quả
     show_image("Denoised Image", denoised_img)
     
-    # Bước 2: Chuyển ảnh sang ảnh xám (Grayscale)
-    gray_img = cv2.cvtColor(denoised_img, cv2.COLOR_BGR2GRAY)
-    show_image("Grayscale Image", gray_img)
-    
-    # Bước 3: Làm nét ảnh (Sharpening)
     kernel = np.array([[0, -1, 0], [-1, 4.8, -1], [0, -1, 0]])  # Kernel mạnh để làm nét
     sharpened_img = cv2.filter2D(gray_img, -1, kernel)
     show_image("Sharpened Image", sharpened_img)
     
-    # Bước 4: Nhị phân hóa ảnh bằng ngưỡng động
-            # thresh_value = 155  # Ngưỡng tĩnh bạn có thể điều chỉnh
-            # _, binary_img = cv2.threshold(sharpened_img, thresh_value, 255, cv2.THRESH_BINARY)
-            # show_image("Binary Image", binary_img)
+    # Bước 2: Chuyển ảnh sang ảnh xám (Grayscale)
+    gray_img = cv2.cvtColor(denoised_img, cv2.COLOR_BGR2GRAY)
+    show_image("Grayscale Image", gray_img)
+    
+    # Bước 3: Nhị phân hóa ảnh bằng ngưỡng động
     binary_img = cv2.adaptiveThreshold(sharpened_img, 255, 
                                       cv2.ADAPTIVE_THRESH_MEAN_C, 
                                       cv2.THRESH_BINARY, 
@@ -53,8 +49,8 @@ def preprocess_image(image_path):
 def load_model(model_path):
     return YOLO(model_path)
 
-# Hàm xử lý ảnh từ thư mục (nhiều ảnh)
-def process_images_from_directory(model, input_dir, output_dir):
+# Hàm cắt ảnh từ thư mục (nhiều ảnh)
+def cut_images_from_directory(model, input_dir, output_dir):
     os.makedirs(output_dir, exist_ok=True)  # Tạo thư mục lưu ảnh nếu chưa có
 
     for filename in os.listdir(input_dir):
@@ -88,8 +84,8 @@ def process_images_from_directory(model, input_dir, output_dir):
                     print(f"Đã lưu ảnh biển số xe tại: {output_path}")
     print("ĐÃ CẮT ẢNH XONG")
 
-# Hàm xử lý ảnh đơn (một ảnh)
-def process_single_image(model, img_path, output_dir):
+# Hàm cắt ảnh đơn (một ảnh)
+def cut_single_image(model, img_path, output_dir):
     # Đọc ảnh từ đường dẫn
     img = cv2.imread(img_path)
     if img is None:
@@ -136,11 +132,11 @@ def process_single_image(model, img_path, output_dir):
 def detect_plate(model, img_path, output_dir, input_dir=None):
     # Nếu có thư mục input_dir, xử lý tất cả các ảnh trong thư mục đó
     if input_dir:
-        process_images_from_directory(model, input_dir, output_dir)  # Xử lý tất cả ảnh trong thư mục
+        cut_images_from_directory(model, input_dir, output_dir)  # Xử lý tất cả ảnh trong thư mục
         return
 
     # Nếu chỉ có một ảnh đầu vào, xử lý ảnh đó
-    return process_single_image(model, img_path, output_dir)
+    return cut_single_image(model, img_path, output_dir)
 
 if __name__ == "__main__":
     # Đường dẫn đến mô hình YOLO đã huấn luyện
