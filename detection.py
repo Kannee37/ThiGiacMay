@@ -55,41 +55,6 @@ def preprocess_noisy_image(image_path):
 def load_model(model_path):
     return YOLO(model_path)
 
-# Hàm cắt ảnh từ thư mục (nhiều ảnh)
-def cut_images_from_directory(model, input_dir, output_dir):
-    os.makedirs(output_dir, exist_ok=True)  # Tạo thư mục lưu ảnh nếu chưa có
-
-    for filename in os.listdir(input_dir):
-        if filename.endswith(('.jpg', '.jpeg', '.png')):  # Kiểm tra định dạng ảnh
-            img_path = os.path.join(input_dir, filename)
-            img = cv2.imread(img_path)
-
-            # Dự đoán với mô hình YOLO
-            results = model(img)
-
-            # Kiểm tra số lượng bounding boxes được phát hiện
-            detected_count = len(results[0].boxes)
-            if detected_count == 0:
-                print(f"Không phát hiện biển số trong ảnh: {filename}")
-            else:
-                print(f"Phát hiện {detected_count} biển số trong ảnh: {filename}")
-
-                # Lặp qua tất cả các bounding box và cắt ảnh biển số
-                for i, result in enumerate(results[0].boxes):
-                    coords = result.xyxy.tolist()[0]  # Convert tensor to list and access the first element
-                    xmin, ymin, xmax, ymax = map(int, coords)
-
-                    # Cắt ảnh biển số
-                    cropped_img = img[ymin:ymax, xmin:xmax]
-
-                    # Thêm dấu thời gian vào tên file ảnh cắt
-                    timestamp = int(time.time())  # Dấu thời gian để tạo tên file duy nhất
-                    output_filename = f"{os.path.splitext(filename)[0]}_cropped_{i}_{timestamp}.jpg"
-                    output_path = os.path.join(output_dir, output_filename)
-                    cv2.imwrite(output_path, cropped_img)
-                    print(f"Đã lưu ảnh biển số xe tại: {output_path}")
-    print("ĐÃ CẮT ẢNH XONG")
-
 # Hàm cắt ảnh đơn (một ảnh)
 def cut_single_image(model, img_path, output_dir):
     # Đọc ảnh từ đường dẫn
@@ -115,6 +80,15 @@ def cut_single_image(model, img_path, output_dir):
     # Lặp qua tất cả các bounding box và cắt biển số ra
     for idx, box in enumerate(boxes):
         x1, y1, x2, y2 = map(int, box)  # Lấy tọa độ cắt
+        
+        # Mở rộng bounding box thêm 20px ra ngoài
+        padding = 20  # Số điểm mở rộng
+        x1 = max(x1 - padding, 0)  # Đảm bảo x1 không đi ra ngoài ảnh
+        y1 = max(y1 - padding, 0)  # Đảm bảo y1 không đi ra ngoài ảnh
+        x2 = min(x2 + padding, img.shape[1])  # Đảm bảo x2 không vượt qua chiều rộng ảnh
+        y2 = min(y2 + padding, img.shape[0])  # Đảm bảo y2 không vượt qua chiều cao ảnh
+        
+        # Cắt biển số từ ảnh
         cropped_plate = img[y1:y2, x1:x2]  # Cắt biển số
         
         # Thêm dấu thời gian vào tên file ảnh cắt
@@ -133,6 +107,47 @@ def cut_single_image(model, img_path, output_dir):
     print(f"Đã lưu tất cả biển số đã cắt vào thư mục: {output_dir}")
     
     return cropped_plates, result_img
+# Hàm cắt ảnh từ thư mục (nhiều ảnh)
+def cut_images_from_directory(model, input_dir, output_dir):
+    os.makedirs(output_dir, exist_ok=True)  # Tạo thư mục lưu ảnh nếu chưa có
+
+    for filename in os.listdir(input_dir):
+        if filename.endswith(('.jpg', '.jpeg', '.png')):  # Kiểm tra định dạng ảnh
+            img_path = os.path.join(input_dir, filename)
+            img = cv2.imread(img_path)
+
+            # Dự đoán với mô hình YOLO
+            results = model(img)
+
+            # Kiểm tra số lượng bounding boxes được phát hiện
+            detected_count = len(results[0].boxes)
+            if detected_count == 0:
+                print(f"Không phát hiện biển số trong ảnh: {filename}")
+            else:
+                print(f"Phát hiện {detected_count} biển số trong ảnh: {filename}")
+
+                # Lặp qua tất cả các bounding box và cắt ảnh biển số
+                for i, result in enumerate(results[0].boxes):
+                    coords = result.xyxy.tolist()[0]  # Convert tensor to list and access the first element
+                    xmin, ymin, xmax, ymax = map(int, coords)
+
+                    # Mở rộng bounding box thêm 20px
+                    padding = 20  # Số điểm mở rộng
+                    xmin = max(xmin - padding, 0)  # Đảm bảo xmin không đi ra ngoài ảnh
+                    ymin = max(ymin - padding, 0)  # Đảm bảo ymin không đi ra ngoài ảnh
+                    xmax = min(xmax + padding, img.shape[1])  # Đảm bảo xmax không vượt qua chiều rộng ảnh
+                    ymax = min(ymax + padding, img.shape[0])  # Đảm bảo ymax không vượt qua chiều cao ảnh
+
+                    # Cắt ảnh biển số
+                    cropped_img = img[ymin:ymax, xmin:xmax]
+
+                    # Thêm dấu thời gian vào tên file ảnh cắt
+                    timestamp = int(time.time())  # Dấu thời gian để tạo tên file duy nhất
+                    output_filename = f"{os.path.splitext(filename)[0]}_cropped_{i}_{timestamp}.jpg"
+                    output_path = os.path.join(output_dir, output_filename)
+                    cv2.imwrite(output_path, cropped_img)
+                    print(f"Đã lưu ảnh biển số xe tại: {output_path}")
+    print("ĐÃ CẮT ẢNH XONG")
 
 # Hàm chính để nhận diện biển số xe
 def detect_plate(model, img_path, output_dir, input_dir=None):
