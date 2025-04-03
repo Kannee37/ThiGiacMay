@@ -17,24 +17,31 @@ def show_image(title, img):
     plt.show()
 
 #xử lý ảnh
+def preprocess_noisy_image(image_path):
     # Đọc ảnh
     img = cv2.imread(image_path)
     show_image("Original Image", img)
     
     # Bước 1: Khử nhiễu (Noise Reduction)
     denoised_img = cv2.GaussianBlur(img, (5, 5), 0)  # Kernel lớn để khử noise hiệu quả
+    # denoised_img = cv2.bilateralFilter(img, d=9, sigmaColor=75, sigmaSpace=75)
     show_image("Denoised Image", denoised_img)
     
-    kernel = np.array([[0, -1, 0], [-1, 4.8, -1], [0, -1, 0]])  # Kernel mạnh để làm nét
-    sharpened_img = cv2.filter2D(gray_img, -1, kernel)
-    show_image("Sharpened Image", sharpened_img)
+    # kernel = np.array([[0, -1, 0], [-1, 4.8, -1], [0, -1, 0]])  # Kernel mạnh để làm nét
+    # sharpened_img = cv2.filter2D(denoised_img, -1, kernel)
+    # show_image("Sharpened Image", sharpened_img)
     
     # Bước 2: Chuyển ảnh sang ảnh xám (Grayscale)
     gray_img = cv2.cvtColor(denoised_img, cv2.COLOR_BGR2GRAY)
     show_image("Grayscale Image", gray_img)
     
-    # Bước 3: Nhị phân hóa ảnh bằng ngưỡng động
-    binary_img = cv2.adaptiveThreshold(sharpened_img, 255, 
+    # Bước 3: Làm nét ảnh (Sharpening)
+    kernel = np.array([[0, -1, 0], [-1, 4.8, -1], [0, -1, 0]])  # Kernel mạnh để làm nét
+    sharpened_img = cv2.filter2D(gray_img, -1, kernel)
+    show_image("Sharpened Image", sharpened_img)
+    
+    # Bước 4: Nhị phân hóa ảnh bằng ngưỡng động
+    binary_img = cv2.adaptiveThreshold(gray_img, 255, 
                                       cv2.ADAPTIVE_THRESH_MEAN_C, 
                                       cv2.THRESH_BINARY, 
                                       11, 2)  # Tham số 11: kích thước của vùng ô vuông (block size), 2: giá trị điều chỉnh
@@ -146,7 +153,7 @@ if __name__ == "__main__":
     image_path = "C:/Users/ADMIN/Documents/GitHub/ThiGiacMay/xe.png"
     
     # Tiền xử lý ảnh
-    # processed_img = preprocess_image(image_path)
+    # processed_img = preprocess_noisy_image(image_path)
 
     # Đường dẫn thư mục để lưu ảnh cắt
     output_dir = "C:/Users/ADMIN/Documents/GitHub/ThiGiacMay/cropped_images"  # Thư mục đầu ra
