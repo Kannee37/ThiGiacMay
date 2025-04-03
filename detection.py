@@ -17,7 +17,6 @@ def show_image(title, img):
     plt.show()
 
 #xử lý ảnh
-def preprocess_image(image_path):
     # Đọc ảnh
     img = cv2.imread(image_path)
     show_image("Original Image", img)
