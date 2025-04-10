@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Trang chủ</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
+
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f8f8f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .container-md {
+            margin-top: 40px;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            text-align: center;
+            max-width: 1200px;
+            height: 100%;
+        }
+
+        .logo_tlu {
+            width: 15%;
+            margin: 10px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .input-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .input-container button {
+            background-color: #d32f2f;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+        }
+
+        .input-container button:hover {
+            background-color: rgb(167, 25, 82);
+        }
+
+        .result-box {
+            margin-top: 20px;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            padding: 15px;
+            font-size: 14px;
+            color: #333;
+            font-weight: bold;
+            min-height: 50px;
+            line-height: 1.5;
+        }
+
+        .result-text {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        button {
+            width: 100%;
+            background-color: #d32f2f;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background-color: #c2185b;
+        }
+
+        #mediaDisplay {
+            margin-top: 15px;
+        }
+
+        #mediaDisplay img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        #mediaDisplay video {
+            width: 60%;
+            max-height: 300px;
+        }
+
+        .title {
+            margin: 40px;
+            font-size: 50px;
+            font-family: "Times New Roman", Times, serif;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-md">
+        <!--header-->
+        <div class="header text-center">
+            <img src="https://thanglong.edu.vn/themes/md_tlu/img/logo.svg" 
+                alt="Logo Thang Long University" class="logo_tlu">
+            <p class='title fw-bold'>NHẬN DIỆN BIỂN SỐ XE</p>
+        </div>
+
+        <!-- Form section -->
+        <form id="uploadForm" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="row form-container text-center mt-5 mx-2">
+                <!-- Buttons to choose image input or open camera for video -->
+                <div class="col-lg-2 input-container mb-4 align-self-center" style="display: flex; flex-direction: column; gap: 10px;">
+                    <div> 
+                        <button class="btn btn-danger align-self-center" onclick="document.getElementById('imageInput').click();">Ảnh</button>
+                    </div>
+                    <div>
+                        <button class="btn btn-danger align-self-center" onclick="toggleCamera()">Input/Ngắt Camera</button>
+                    </div>
+                </div>
+                <!-- Section to display the selected image or video -->
+                <div class="col-lg-7 mt-4">
+                    <input type="file" id="imageInput" style="display:none" accept="image/*, video/*" onchange="previewMedia(event)">
+                    <video id="videoInput" style="display:none" width="100%" height="auto" autoplay></video>
+
+                    <div id="mediaDisplay" >
+                        <!-- Placeholder for media -->
+                    </div>
+                </div>
+                <!-- Box to display the result -->
+                <div class="col-lg-3 result-box border mt-3 p-3" style="min-height: 100px; display: flex; flex-direction: column; gap: 10px;">
+                    <p class='result-text'> Kết quả </p>
+                    <div id="result"></div> <!-- Kết quả hiển thị ở đây -->
+                </div>
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-danger">Xem Kết Quả</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        let cameraStream = null;
+
+        // Preview image or video after input
+        function previewMedia(event) {
+            const mediaDisplay = document.getElementById('mediaDisplay');
+            const file = event.target.files[0];
+
+            if (file) {
+                // Clear previous content before displaying new one
+                mediaDisplay.innerHTML = '';
+
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        mediaDisplay.innerHTML = `<img src="${e.target.result}" alt="Image preview" style="max-width: 100%; height: auto;">`;
+                    }
+                    reader.readAsDataURL(file);
+                } else if (file.type.startsWith('video/')) {
+                    mediaDisplay.innerHTML = `<video width="100%" controls>
+                                                <source src="${URL.createObjectURL(file)}" type="video/mp4">
+                                                Your browser does not support the video tag.
+                                            </video>`;
+                }
+            }
+        }
+
+        // Start/Stop camera for video input
+        function toggleCamera() {
+            const mediaDisplay = document.getElementById('mediaDisplay');
+            const videoInput = document.getElementById('videoInput');
+
+            // Clear any previous content
+            mediaDisplay.innerHTML = '';
+
+            if (cameraStream) {
+                // Stop camera
+                cameraStream.getTracks().forEach(track => track.stop());
+                videoInput.style.display = 'none';  // Hide video element
+                cameraStream = null;  // Clear stream
+            } else {
+                // Start camera
+                const constraints = {
+                    video: {
+                        facingMode: "environment"  // Use the rear camera
+                    }
+                };
+
+                navigator.mediaDevices.getUserMedia(constraints)
+                    .then(function(stream) {
+                        cameraStream = stream;
+                        videoInput.srcObject = stream;
+                        videoInput.style.display = 'block';  // Show video element
+                        mediaDisplay.innerHTML = '';  // Clear previous media display
+                    })
+                    .catch(function(error) {
+                        console.log("Error accessing the camera: ", error);
+                    });
+            }
+        }
+
+        const form = document.getElementById('uploadForm');
+    
+    form.onsubmit = function(event) {
+        event.preventDefault();  // Ngừng gửi form theo cách thông thường
+
+        const formData = new FormData(form);
+        const imageInput = document.getElementById('imageInput');
+
+        // Kiểm tra nếu có ảnh được chọn
+        if (imageInput.files.length > 0) {
+            const imageFile = imageInput.files[0];
+
+            // Gửi ảnh tới Django API
+            fetch("{% url 'upload_image' %}", {
+                method: 'POST',
+                body: formData, // Tự động bao gồm ảnh trong formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hiển thị kết quả từ API
+                document.getElementById('result').innerText = `Kết quả nhận diện: ${data.result}`;
+                
+                // Hiển thị ảnh đã nhận diện với bounding box
+                const imageUrl = data.image_url;
+                const boundingBoxImg = data.bounding_box_image;
+                
+                document.getElementById('mediaDisplay').innerHTML = `
+                    <img src="${imageUrl}" alt="Uploaded Image" style="max-width: 100%;">
+                    <img src="${boundingBoxImg}" alt="Image with Bounding Box" style="max-width: 100%;">
+                `;
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    };
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+</html>
